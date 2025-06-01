@@ -6,12 +6,8 @@
 <h3 align="center">Say hi to December 👋</h3>
 
   <p align="center">
-    
     December is an open-source Loveable, Replit or Bolt alternative that you can run locally with your own API keys, ensuring complete privacy and significant cost savings.
-    
-    <br />
-    <br />
-    <a href="https://voice.julianschoen.co">View Demo</a>
+    <a href="https://december.ai">View Demo</a>
     ·
     <a href="https://github.com/ntegrals/december/issues/new?assignees=&labels=bug&projects=&template=bug_report.md&title=">Report Bug</a>
     ·
