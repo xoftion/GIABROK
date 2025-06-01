@@ -1,8 +1,10 @@
 import OpenAI from "openai";
+import { config } from "../../config";
 import prompt from "../utils/prompt.txt";
 
 const openai = new OpenAI({
-  apiKey: "",
+  apiKey: config.aiSdk.apiKey,
+  baseURL: config.aiSdk.baseUrl || "https://api.openai.com/v1",
 });
 
 export interface Message {
@@ -97,9 +99,9 @@ export async function sendMessage(
   // );
 
   const completion = await openai.chat.completions.create({
-    model: "gpt-4o",
+    model: config.aiSdk.model,
     messages,
-    temperature: 0.8,
+    temperature: config.aiSdk.temperature,
   });
 
   console.log("ai response:", completion);
