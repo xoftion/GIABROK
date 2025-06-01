@@ -84,44 +84,43 @@ export const WorkspaceDashboard = ({
         const response = await getChatHistory(containerId);
         if (response.success) {
           if (response.messages.length === 0) {
-            const welcomeMessage: Message = {
-              id: "welcome",
-              role: "assistant",
-              content: `Welcome to your **Project Workspace**! 
+            // Check for prompt in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const promptFromUrl = urlParams.get("prompt");
 
-## You're now working on Container: \`${containerId.slice(0, 8)}\`
+            if (promptFromUrl) {
+              // Send the prompt automatically
+              setInputValue(promptFromUrl);
+              try {
+                const messageResponse = await sendChatMessage(
+                  containerId,
+                  promptFromUrl
+                );
+                if (messageResponse.success) {
+                  setMessages([
+                    messageResponse.userMessage,
+                    messageResponse.assistantMessage,
+                  ]);
+                }
+              } catch (error) {
+                console.error("Failed to send initial prompt:", error);
+              }
 
-This workspace provides:
-
-### 🔄 **Live Preview**
-- See your changes in real-time as you develop
-- The preview updates automatically when you save files
-
-### 💻 **Code Editor**
-- Full-featured Monaco editor with syntax highlighting
-- File tree navigation for your Next.js project
-- TypeScript and JavaScript support
-
-### 💬 **AI Assistant** 
-- Ask questions about your code
-- Get help with Next.js development
-- Debug issues and get suggestions
-
-### 🛠 **Development Tools**
-- File management through the API
-- Package installation capabilities
-- Container control (start/stop)
-
-## Getting Started:
-1. Your application is running and visible in the preview pane
-2. Switch to the code editor to make changes to your files
-3. See results instantly in the live preview
-4. Ask me any questions about your project!
-
-What would you like to work on first?`,
-              timestamp: new Date().toISOString(),
-            };
-            setMessages([welcomeMessage]);
+              // Clean up URL
+              window.history.replaceState(
+                {},
+                document.title,
+                window.location.pathname
+              );
+            } else {
+              const welcomeMessage: Message = {
+                id: "welcome",
+                role: "assistant",
+                content: "",
+                timestamp: new Date().toISOString(),
+              };
+              setMessages([welcomeMessage]);
+            }
           } else {
             setMessages(response.messages);
           }
@@ -464,6 +463,7 @@ What would you like to work on first?`,
                       key={message.id}
                       message={message}
                       formatMessageContent={formatMessageContent}
+                      containerId={containerId}
                     />
                   ))}
                   {isLoading && (

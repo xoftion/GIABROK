@@ -1,7 +1,12 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Container, getContainers } from "../../../lib/backend/api";
+import {
+  Container,
+  createContainer,
+  getContainers,
+} from "../../../lib/backend/api";
 import { CreateProjectCard } from "./CreateProjectCard";
 import { ProjectCard } from "./ProjectCard";
 
@@ -9,6 +14,9 @@ export const ProjectsPage = () => {
   const [containers, setContainers] = useState<Container[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [promptInput, setPromptInput] = useState("");
+  const [isCreatingFromPrompt, setIsCreatingFromPrompt] = useState(false);
+  const router = useRouter();
 
   const fetchContainers = async () => {
     try {
@@ -32,6 +40,35 @@ export const ProjectsPage = () => {
 
   const handleStatusChange = () => {
     fetchContainers();
+  };
+
+  const handlePromptSubmit = async () => {
+    if (!promptInput.trim() || isCreatingFromPrompt) return;
+
+    setIsCreatingFromPrompt(true);
+
+    try {
+      const containerResponse = await createContainer();
+      const containerId = containerResponse.containerId;
+
+      router.push(
+        `/projects/${containerId}?prompt=${encodeURIComponent(
+          promptInput.trim()
+        )}`
+      );
+    } catch (error) {
+      console.error("Failed to create project from prompt:", error);
+      setError("Failed to create project. Please try again.");
+    } finally {
+      setIsCreatingFromPrompt(false);
+    }
+  };
+
+  const handlePromptKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handlePromptSubmit();
+    }
   };
 
   if (isLoading) {
@@ -156,23 +193,35 @@ export const ProjectsPage = () => {
                 <div className="relative bg-white/5 backdrop-blur-sm rounded-lg border border-white/10 hover:border-white/20 transition-all duration-200">
                   <input
                     type="text"
+                    value={promptInput}
+                    onChange={(e) => setPromptInput(e.target.value)}
+                    onKeyDown={handlePromptKeyDown}
                     placeholder="Create a landing page for my startup..."
-                    className="w-full bg-transparent text-white placeholder-gray-500 focus:outline-none py-4 px-6 text-base"
+                    disabled={isCreatingFromPrompt}
+                    className="w-full bg-transparent text-white placeholder-gray-500 focus:outline-none py-4 px-6 text-base disabled:opacity-50"
                   />
-                  <button className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-white text-black hover:bg-gray-100 rounded-md transition-colors">
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M13 7l5 5m0 0l-5 5m5-5H6"
-                      />
-                    </svg>
+                  <button
+                    onClick={handlePromptSubmit}
+                    disabled={!promptInput.trim() || isCreatingFromPrompt}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-white text-black hover:bg-gray-100 disabled:bg-gray-600 disabled:text-gray-400 disabled:cursor-not-allowed rounded-md transition-colors"
+                  >
+                    {isCreatingFromPrompt ? (
+                      <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 7l5 5m0 0l-5 5m5-5H6"
+                        />
+                      </svg>
+                    )}
                   </button>
                 </div>
               </div>
