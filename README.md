@@ -3,13 +3,13 @@
 <br />
 <div align="center">
 
-<h3 align="center">Say hi to December 👋</h3>
+<h3 align="center">Say hi to December ☃️</h3>
 
   <p align="center">
     December is an open-source Loveable, Replit or Bolt alternative that you can run locally with your own API keys, ensuring complete privacy and significant cost savings.
     <br />
     <br />
-    <a href="https://december.ai">View Demo</a>
+    <a href="https://december.ai">View Documentation</a>
     ·
     <a href="https://github.com/ntegrals/december/issues/new?assignees=&labels=bug&projects=&template=bug_report.md&title=">Report Bug</a>
     ·
@@ -18,7 +18,7 @@
   </p>
 </div>
 <a href="https://github.com/ntegrals/december">
-    <img src=".assets//header.png" alt="Logo">
+    <img src=".assets/header.png" alt="December Logo">
   </a>
 
 ## Features
@@ -30,9 +30,9 @@
     ✅ Real-time chat assistant for development help
     ✅ Project export and deployment capabilities
 
-## Demo
+<!-- ## Demo
 
-You can test the December here: [https://december.ai](https://december.ai)
+You can test the December here: [https://december.ai](https://december.ai) -->
 
 ## Motivation
 
@@ -64,26 +64,41 @@ December proves that you don't need to choose between powerful AI assistance and
    git clone https://github.com/ntegrals/december
    ```
 
-2. Get an API Key from [https://openai.com/](https://openai.com/)
+2. Get an API Key from any OpenAI sdk compatible provider (e.g. OpenAI, Claude, Ollama, OpenRouter, etc.) and set it in the `config.ts` file.
 
-   Copy the .env.example file to .env.local and add your API keys
+   The start.sh script will automatically copy over the file into the backend folder.
 
-   ```sh
-   OPENAI_API_KEY="YOUR OPENAI API KEY"
-   OPENAI_BASE_URL=(Optional)
-   ```
-
-3. Install the dependencies
+   I highly recommend using Sonnet-4 from Anthropic as it is the best coding model available right now.
 
    ```sh
-   npm install
+    baseUrl: "https://openrouter.ai/api/v1",
+
+    apiKey:
+      "sk-...",
+
+    model: "anthropic/claude-sonnet-4",
+    temperature: 0.7,
    ```
 
-4. Run the app
+3. Install docker (Docker Desktop is the easiest way to get started)
+
+   - [Docker Desktop for Mac](https://www.docker.com/products/docker-desktop/)
+   - [Docker Desktop for Windows](https://www.docker.com/products/docker-desktop/)
+   - [Docker Engine for Linux](https://docs.docker.com/engine/install/)
+
+   Make sure you have Docker running and the Docker CLI installed.
+
+4. Run the start script to set up the environment
+
    ```sh
-   npm run dev
+   sh start.sh
    ```
-5. Deploy to vercel
+
+5. The application will start in development mode, and you can access it at [http://localhost:3001](http://localhost:3001).
+
+   The backend will run on port 3000, and the frontend will run on port 3001.
+
+   You can now start building your applications with December! 🥳
 
 ## Contact
 
