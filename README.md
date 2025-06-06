@@ -86,7 +86,7 @@ December proves that you don't need to choose between powerful AI assistance and
    - [Docker Desktop for Windows](https://www.docker.com/products/docker-desktop/)
    - [Docker Engine for Linux](https://docs.docker.com/engine/install/)
 
-   Make sure you have Docker running and the Docker CLI installed.
+   Make sure you have Docker running and the Docker CLI installed before proceeding.
 
 4. Run the start script to set up the environment
 
