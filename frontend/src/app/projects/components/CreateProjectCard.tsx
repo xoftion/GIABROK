@@ -43,7 +43,8 @@ export const CreateProjectCard = ({
             </div>
             <div className="text-center">
               <span className="text-lg font-semibold text-white mb-2 block">
-                Creating project...
+                Creating project... (the first time will take a bit longer due
+                to container setup)
               </span>
               <span className="text-sm text-white/60">
                 Setting up your container

@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { toast } from "react-hot-toast";
 import {
   getChatHistory,
   Message,
@@ -308,10 +309,14 @@ export const WorkspaceDashboard = ({
           {/* Left section */}
           <div className="flex items-center gap-3 relative z-10">
             <Link
-              href="/projects"
+              href="/"
               className="flex items-center gap-3 text-white/90 hover:text-white transition-colors group"
             >
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 rounded-lg shadow-lg group-hover:shadow-xl group-hover:shadow-purple-500/30 transition-all" />
+              <img
+                className="w-8 h-8 rounded-lg"
+                src="/logo-white.png"
+                alt="December Logo"
+              />
               <span className="text-lg font-semibold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
                 December
               </span>
@@ -340,10 +345,9 @@ export const WorkspaceDashboard = ({
             </button>
           </div>
 
-          {/* Center section - Breadcrumb */}
           <div className="hidden md:flex items-center gap-2 text-sm text-white/60 relative z-10">
             <Link
-              href="/projects"
+              href="/"
               className="hover:text-white transition-colors flex items-center gap-1"
             >
               <Home className="w-3.5 h-3.5" />
@@ -436,7 +440,15 @@ export const WorkspaceDashboard = ({
               <span className="hidden sm:inline">Export</span>
             </button>
 
-            <button className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white text-black hover:bg-gray-100 rounded-md text-xs font-medium transition-all shadow-sm hover:shadow-lg">
+            <button
+              onClick={() =>
+                toast("This feature is coming soon!", {
+                  icon: "🙌",
+                  duration: 1000,
+                })
+              }
+              className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white text-black hover:bg-gray-100 rounded-md text-xs font-medium transition-all shadow-sm hover:shadow-lg"
+            >
               <Globe className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Deploy</span>
             </button>

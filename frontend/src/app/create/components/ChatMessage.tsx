@@ -524,7 +524,11 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
     >
       {message.role === "assistant" && (
         <div className="flex items-center gap-2 mb-2 w-full">
-          <div className="w-4 h-4 bg-gradient-to-br from-blue-500 to-purple-500 rounded shadow-sm" />
+          <img
+            className="w-4 h-4"
+            src="/logo-white.png"
+            alt="Assistant Avatar"
+          />
           <span className="text-sm font-medium text-white/90">Assistant</span>
           <span className="text-xs text-white/40 ml-auto">
             {formatTimestamp(message.timestamp)}
