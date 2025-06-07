@@ -58,7 +58,7 @@ export const WorkspaceDashboard = ({
     if (containerId) {
       const fetchContainerUrl = async () => {
         try {
-          const response = await fetch(`http://localhost:3000/containers`);
+          const response = await fetch(`http://localhost:4000/containers`);
           const data = await response.json();
           if (data.success) {
             const container = data.containers.find(
@@ -90,7 +90,6 @@ export const WorkspaceDashboard = ({
             const promptFromUrl = urlParams.get("prompt");
 
             if (promptFromUrl) {
-              // Send the prompt automatically
               setInputValue(promptFromUrl);
               try {
                 const messageResponse = await sendChatMessage(
@@ -107,20 +106,11 @@ export const WorkspaceDashboard = ({
                 console.error("Failed to send initial prompt:", error);
               }
 
-              // Clean up URL
               window.history.replaceState(
                 {},
                 document.title,
                 window.location.pathname
               );
-            } else {
-              const welcomeMessage: Message = {
-                id: "welcome",
-                role: "assistant",
-                content: "",
-                timestamp: new Date().toISOString(),
-              };
-              setMessages([welcomeMessage]);
             }
           } else {
             setMessages(response.messages);
@@ -194,7 +184,7 @@ export const WorkspaceDashboard = ({
 
     try {
       const response = await fetch(
-        `http://localhost:3000/containers/${containerId}/export`
+        `http://localhost:4000/containers/${containerId}/export`
       );
 
       if (!response.ok) {
@@ -293,6 +283,38 @@ export const WorkspaceDashboard = ({
       );
     });
   };
+
+  const WelcomeMessage = () => (
+    <div className="flex flex-col items-start mb-4">
+      <div className="flex items-center gap-2 mb-2">
+        <img className="w-4 h-4" src="/logo-white.png" alt="Assistant Avatar" />
+        <span className="text-sm font-medium text-white/90">Assistant</span>
+      </div>
+      <div className="rounded-xl px-4 py-3 text-sm leading-relaxed bg-gray-700/60 backdrop-blur-md border border-gray-600/40 text-gray-100 w-full shadow-sm relative">
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-600/10 via-transparent to-gray-700/10 rounded-xl" />
+        <div className="relative z-10">
+          <div className="prose prose-sm prose-invert max-w-none [&_h2]:text-white [&_h3]:text-white [&_h4]:text-white [&_strong]:text-white">
+            <p className="mb-2">
+              👋 Welcome to your Next.js project! I'm here to help you build,
+              modify, and deploy your application.
+            </p>
+            <p className="mb-2">I can help you with:</p>
+            <ul className="list-disc ml-4 mb-2">
+              <li>Adding new features and components</li>
+              <li>Modifying existing code</li>
+              <li>Installing packages and dependencies</li>
+              <li>Debugging and troubleshooting</li>
+              <li>Optimizing performance</li>
+            </ul>
+            <p className="mb-0">
+              Just describe what you'd like to build or change, and I'll help
+              you make it happen! 🚀
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="flex h-screen bg-black text-white relative overflow-hidden">
@@ -470,6 +492,8 @@ export const WorkspaceDashboard = ({
 
               <div className="flex-1 overflow-y-auto p-4 custom-scrollbar relative z-10">
                 <div className="space-y-4">
+                  {messages.length === 0 && <WelcomeMessage />}
+
                   {messages.map((message) => (
                     <ChatMessage
                       key={message.id}
