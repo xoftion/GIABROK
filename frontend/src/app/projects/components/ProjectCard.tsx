@@ -65,14 +65,13 @@ export const ProjectCard = ({
       <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] via-transparent to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
       <div className="relative z-10">
-        {/* Header */}
         <div className="flex items-start justify-between mb-6">
           <div className="relative">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 via-purple-600 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
-              <div className="w-6 h-6 bg-white/95 rounded-lg shadow-inner flex items-center justify-center">
-                <div className="w-3 h-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-sm"></div>
-              </div>
-            </div>
+            <img
+              className="w-12 h-12 rounded-lg shadow-lg"
+              src={"/logo-black.png"}
+              alt="Project Icon"
+            />
             <div
               className={`absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-black shadow-lg ${
                 isRunning ? "bg-emerald-400" : "bg-gray-400"
@@ -101,7 +100,6 @@ export const ProjectCard = ({
           </div>
         </div>
 
-        {/* Content */}
         <div className="mb-6">
           <h3 className="text-lg font-semibold text-white mb-2 truncate">
             {container.name?.replace("/", "") ||
@@ -118,7 +116,6 @@ export const ProjectCard = ({
           </p>
         </div>
 
-        {/* Port info */}
         {container.assignedPort && (
           <div className="mb-6 bg-black/20 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/10">
             <div className="flex items-center justify-between">
@@ -130,7 +127,6 @@ export const ProjectCard = ({
           </div>
         )}
 
-        {/* Actions */}
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <button
@@ -177,7 +173,6 @@ export const ProjectCard = ({
         </div>
       </div>
 
-      {/* Delete confirmation modal */}
       {showDeleteConfirm && (
         <div className="absolute inset-0 bg-black/80 backdrop-blur-sm rounded-xl flex items-center justify-center z-20">
           <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20 shadow-xl max-w-xs w-full mx-4">

@@ -82,7 +82,11 @@ export const ProjectsPage = () => {
             <div className="max-w-7xl mx-auto px-6 py-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 rounded-lg shadow-lg" />
+                  <img
+                    src="/logo-white.png"
+                    alt="December Logo"
+                    className="w-8 h-8 rounded-lg shadow-lg"
+                  />
                   <span className="text-xl font-semibold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
                     December
                   </span>
@@ -158,7 +162,13 @@ export const ProjectsPage = () => {
           <div className="max-w-7xl mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 rounded-lg shadow-lg" />
+                <img
+                  src="/logo-white.png"
+                  alt="December Logo"
+                  className="w-8 h-8 rounded-lg shadow-lg"
+                />
+                {/* Uncomment the next line to use a gradient box instead of logo */}
+                {/* <div className="w-8 h-8 bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 rounded-lg shadow-lg" /> */}
                 <span className="text-xl font-semibold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
                   December
                 </span>
