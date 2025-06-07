@@ -27,7 +27,12 @@ interface ChatMessageProps {
   formatMessageContent: (content: string) => React.ReactNode[];
   containerId?: string;
 }
-const parseSpecialTags = (content: string, containerId?: string) => {
+
+const parseSpecialTags = (
+  content: string,
+  containerId?: string,
+  messageId?: string
+) => {
   const components: React.ReactNode[] = [];
   let currentIndex = 0;
 
@@ -54,8 +59,27 @@ const parseSpecialTags = (content: string, containerId?: string) => {
     lastDiff: /<last-diff>([\s\S]*?)<\/last-diff>/g,
   };
 
+  const getExecutedKey = (containerId: string) => `executed_${containerId}`;
+
+  const isMessageExecuted = (containerId: string, messageId: string) => {
+    const stored = localStorage.getItem(getExecutedKey(containerId));
+    const executed = new Set(stored ? JSON.parse(stored) : []);
+    return executed.has(messageId);
+  };
+
+  const markMessageExecuted = (containerId: string, messageId: string) => {
+    const stored = localStorage.getItem(getExecutedKey(containerId));
+    const executed = new Set(stored ? JSON.parse(stored) : []);
+    executed.add(messageId);
+    localStorage.setItem(
+      getExecutedKey(containerId),
+      JSON.stringify([...executed])
+    );
+  };
+
   const executeFileOperation = async (type: string, match: RegExpExecArray) => {
-    if (!containerId) return;
+    if (!containerId || !messageId) return;
+    if (isMessageExecuted(containerId, messageId)) return;
 
     try {
       let response;
@@ -68,7 +92,7 @@ const parseSpecialTags = (content: string, containerId?: string) => {
             } chars)`
           );
           response = await fetch(
-            `http://localhost:3000/containers/${containerId}/files`,
+            `http://localhost:4000/containers/${containerId}/files`,
             {
               method: "PUT",
               headers: { "Content-Type": "application/json" },
@@ -85,7 +109,7 @@ const parseSpecialTags = (content: string, containerId?: string) => {
         case "rename":
           console.log(`[FILE OP] Renaming file: ${match[1]} → ${match[2]}`);
           response = await fetch(
-            `http://localhost:3000/containers/${containerId}/files/rename`,
+            `http://localhost:4000/containers/${containerId}/files/rename`,
             {
               method: "PUT",
               headers: { "Content-Type": "application/json" },
@@ -99,7 +123,7 @@ const parseSpecialTags = (content: string, containerId?: string) => {
         case "delete":
           console.log(`[FILE OP] Deleting file: ${match[1]}`);
           response = await fetch(
-            `http://localhost:3000/containers/${containerId}/files`,
+            `http://localhost:4000/containers/${containerId}/files`,
             {
               method: "DELETE",
               headers: { "Content-Type": "application/json" },
@@ -119,7 +143,7 @@ const parseSpecialTags = (content: string, containerId?: string) => {
             }`
           );
           response = await fetch(
-            `http://localhost:3000/containers/${containerId}/dependencies`,
+            `http://localhost:4000/containers/${containerId}/dependencies`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -138,6 +162,9 @@ const parseSpecialTags = (content: string, containerId?: string) => {
       }
 
       console.log(`[FILE OP] ${type} operation completed successfully`);
+      if (messageId && containerId) {
+        markMessageExecuted(containerId, messageId);
+      }
     } catch (error) {
       console.error(`[FILE OP] ${type} operation failed:`, error);
     }
@@ -219,7 +246,10 @@ const parseSpecialTags = (content: string, containerId?: string) => {
   });
 
   if (currentIndex < content.length) {
-    const remainingContent = content.slice(currentIndex);
+    let remainingContent = content.slice(currentIndex);
+
+    remainingContent = remainingContent.replace(/<\/dec-code>/g, "");
+
     if (remainingContent.trim()) {
       components.push(
         <div key="remaining" className="prose prose-sm prose-invert max-w-none">
@@ -557,8 +587,12 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
             <div className="space-y-1">
               {hasSpecialTags ? (
                 <>
-                  {parseSpecialTags(message.content, containerId) || (
-                    <div className="prose prose-sm prose-invert max-w-none [&_h2]:text-white [&_h3]:text-white [&_h4]:text-white [&_strong]:text-white [&_code]:bg-gray-600/60 [&_code]:text-gray-200 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:border [&_code]:border-gray-500/30">
+                  {parseSpecialTags(
+                    message.content,
+                    containerId,
+                    message.id
+                  ) || (
+                    <div className="prose prose-sm prose-invert max-w-none [&_h2]:text-white [&_h3]:text-white [&_h4]:text-white [&_strong]:text-white">
                       {formatMessageContent(message.content)}
                     </div>
                   )}
