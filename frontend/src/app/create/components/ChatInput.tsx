@@ -1,4 +1,5 @@
-import { FileText, Plus, Send } from "lucide-react";
+import { FileText, Send } from "lucide-react";
+import { toast } from "react-hot-toast";
 
 interface ChatInputProps {
   inputValue: string;
@@ -17,6 +18,20 @@ export const ChatInput = ({
   onKeyDown,
   disabled = false,
 }: ChatInputProps) => {
+  const handleAttachClick = () => {
+    toast("File attachment feature coming soon!", {
+      icon: "📎",
+      duration: 2000,
+    });
+  };
+
+  const handleChatClick = () => {
+    toast("Advanced chat features coming soon!", {
+      icon: "💬",
+      duration: 2000,
+    });
+  };
+
   return (
     <div className="p-4">
       <div className="flex flex-col gap-3 p-3 bg-gray-800/60 backdrop-blur-md rounded-xl border border-gray-700/50 shadow-sm relative">
@@ -59,13 +74,7 @@ export const ChatInput = ({
           <div className="flex items-center gap-2">
             <button
               type="button"
-              className="p-1.5 text-zinc-400 hover:text-white hover:bg-gray-700/50 rounded-md transition-all disabled:opacity-50 backdrop-blur-sm"
-              disabled={disabled}
-            >
-              <Plus className="w-4 h-4" />
-            </button>
-            <button
-              type="button"
+              onClick={handleAttachClick}
               className="flex items-center gap-1.5 text-sm text-zinc-400 hover:text-white hover:bg-gray-700/50 px-2 py-1 rounded-md transition-all disabled:opacity-50 backdrop-blur-sm"
               disabled={disabled}
             >
@@ -77,6 +86,7 @@ export const ChatInput = ({
           <div className="flex items-center gap-2">
             <button
               type="button"
+              onClick={handleChatClick}
               className="px-3 py-1.5 text-sm border border-gray-600/50 rounded-lg text-zinc-400 hover:text-white hover:border-gray-500/50 hover:bg-gray-700/30 transition-all disabled:opacity-50 backdrop-blur-sm"
               disabled={disabled}
             >
