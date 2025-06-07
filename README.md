@@ -94,9 +94,9 @@ December proves that you don't need to choose between powerful AI assistance and
    sh start.sh
    ```
 
-5. The application will start in development mode, and you can access it at [http://localhost:3001](http://localhost:3001).
+5. The application will start in development mode, and you can access it at [http://localhost:3000](http://localhost:3000).
 
-   The backend will run on port 3000, and the frontend will run on port 3001.
+   The backend will run on port 4000, and the frontend will run on port 3000.
 
    You can now start building your applications with December! 🥳
 
