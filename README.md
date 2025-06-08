@@ -29,7 +29,7 @@
     ✅ Real-time chat assistant for development help
     ✅ Project export and deployment capabilities
 
-## Get started (2-3 minutes)
+## Get started (~2 minutes)
 
 1. Clone the repo
 
