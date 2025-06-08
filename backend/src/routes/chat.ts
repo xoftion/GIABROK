@@ -27,6 +27,7 @@ router.post("/:containerId/messages", async (req, res) => {
       assistantMessage,
     });
   } catch (error) {
+    console.log(error);
     res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",

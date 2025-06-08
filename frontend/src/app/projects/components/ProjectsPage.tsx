@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { toast } from "react-hot-toast";
 import {
   Container,
   createContainer,
@@ -47,9 +48,18 @@ export const ProjectsPage = () => {
 
     setIsCreatingFromPrompt(true);
 
+    toast("Creating new project...", {
+      icon: "🚀",
+      duration: 3000,
+    });
+
     try {
       const containerResponse = await createContainer();
       const containerId = containerResponse.containerId;
+
+      toast.success("Project created! Redirecting...", {
+        duration: 2000,
+      });
 
       router.push(
         `/projects/${containerId}?prompt=${encodeURIComponent(
@@ -58,6 +68,7 @@ export const ProjectsPage = () => {
       );
     } catch (error) {
       console.error("Failed to create project from prompt:", error);
+      toast.error("Failed to create project. Please try again.");
       setError("Failed to create project. Please try again.");
     } finally {
       setIsCreatingFromPrompt(false);
@@ -167,8 +178,6 @@ export const ProjectsPage = () => {
                   alt="December Logo"
                   className="w-8 h-8 rounded-lg shadow-lg"
                 />
-                {/* Uncomment the next line to use a gradient box instead of logo */}
-                {/* <div className="w-8 h-8 bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 rounded-lg shadow-lg" /> */}
                 <span className="text-xl font-semibold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
                   December
                 </span>

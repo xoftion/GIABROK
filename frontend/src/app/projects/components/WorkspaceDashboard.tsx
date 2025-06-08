@@ -43,6 +43,7 @@ export const WorkspaceDashboard = ({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [containerUrl, setContainerUrl] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState<boolean>(false);
+  const [hasProcessedPrompt, setHasProcessedPrompt] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -84,13 +85,14 @@ export const WorkspaceDashboard = ({
       try {
         const response = await getChatHistory(containerId);
         if (response.success) {
-          if (response.messages.length === 0) {
-            // Check for prompt in URL
+          if (response.messages.length === 0 && !hasProcessedPrompt) {
             const urlParams = new URLSearchParams(window.location.search);
             const promptFromUrl = urlParams.get("prompt");
 
             if (promptFromUrl) {
-              setInputValue(promptFromUrl);
+              setHasProcessedPrompt(true);
+              setIsLoading(true);
+
               try {
                 const messageResponse = await sendChatMessage(
                   containerId,
@@ -104,6 +106,16 @@ export const WorkspaceDashboard = ({
                 }
               } catch (error) {
                 console.error("Failed to send initial prompt:", error);
+                const errorMessage: Message = {
+                  id: `error-${Date.now()}`,
+                  role: "assistant",
+                  content:
+                    "Sorry, I encountered an error processing your request. Please try again.",
+                  timestamp: new Date().toISOString(),
+                };
+                setMessages([errorMessage]);
+              } finally {
+                setIsLoading(false);
               }
 
               window.history.replaceState(
@@ -121,7 +133,9 @@ export const WorkspaceDashboard = ({
       }
     };
 
-    loadChatHistory();
+    if (containerId) {
+      loadChatHistory();
+    }
   }, [containerId]);
 
   const handleSendMessage = async (): Promise<void> => {
@@ -318,17 +332,14 @@ export const WorkspaceDashboard = ({
 
   return (
     <div className="flex h-screen bg-black text-white relative overflow-hidden">
-      {/* Background layers */}
       <div className="absolute inset-0 bg-gradient-to-br from-gray-900/50 via-black to-black" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-white/5 via-transparent to-transparent" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] from-blue-900/10 via-transparent to-transparent" />
 
       <div className="flex flex-col w-full relative z-10">
-        {/* Top Navigation */}
         <div className="h-14 bg-black/70 backdrop-blur-xl border-b border-gray-800/50 flex items-center justify-between px-4 relative">
           <div className="absolute inset-0 bg-gradient-to-r from-gray-700/5 via-transparent to-gray-700/5" />
 
-          {/* Left section */}
           <div className="flex items-center gap-3 relative z-10">
             <Link
               href="/"
@@ -381,7 +392,6 @@ export const WorkspaceDashboard = ({
             </span>
           </div>
 
-          {/* Right section */}
           <div className="flex items-center gap-2 relative z-10">
             {viewMode === "preview" && (
               <button
@@ -478,7 +488,6 @@ export const WorkspaceDashboard = ({
         </div>
 
         <div className="flex min-h-0 flex-1">
-          {/* Chat Sidebar */}
           {sidebarOpen && (
             <div className="w-80 bg-black/60 backdrop-blur-xl border-r border-gray-800/50 flex flex-col relative">
               <div className="absolute inset-0 bg-gradient-to-b from-gray-700/10 via-gray-800/5 to-gray-700/10" />
@@ -533,7 +542,6 @@ export const WorkspaceDashboard = ({
             </div>
           )}
 
-          {/* Main Content */}
           <div className="flex-1 bg-black relative">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,_rgba(148,163,184,0.15)_1px,_transparent_0)] bg-[length:32px_32px] opacity-5" />
 

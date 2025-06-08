@@ -103,10 +103,10 @@ ${codeContext}`;
     })),
   ];
 
-  console.log(
-    "Chat history being sent to LLM:",
-    JSON.stringify(messages, null, 2)
-  );
+  // console.log(
+  //   "Chat history being sent to LLM:",
+  //   JSON.stringify(messages, null, 2)
+  // );
 
   const completion = await openai.chat.completions.create({
     model: config.aiSdk.model,
@@ -115,7 +115,7 @@ ${codeContext}`;
     temperature: config.aiSdk.temperature,
   });
 
-  console.log("ai response:", completion);
+  // console.log("ai response:", completion);
 
   const assistantContent =
     completion.choices[0]?.message?.content ||
