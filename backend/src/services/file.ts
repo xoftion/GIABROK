@@ -19,6 +19,14 @@ export interface FileItem {
   content?: string;
 }
 
+export interface FileContentItem {
+  name: string;
+  path: string;
+  type: "file" | "directory";
+  content?: string;
+  children?: FileContentItem[];
+}
+
 export async function getFileTree(
   docker: Docker,
   containerId: string,
@@ -90,6 +98,131 @@ export async function getFileTree(
   return root?.children || [];
 }
 
+export async function getFileContentTree(
+  docker: Docker,
+  containerId: string,
+  containerPath: string = BASE_PATH
+): Promise<FileContentItem[]> {
+  const container = docker.getContainer(containerId);
+
+  const findCommand = [
+    "sh",
+    "-c",
+    `find ${containerPath} \\( -name node_modules -o -name .next -o -path "*/components/ui" \\) -prune -o -type f -o -type d | grep -v -E "(node_modules|\\.next|components/ui|bun\\.lock|components\\.json|next-env\\.d\\.ts|package-lock\\.json|postcss\\.config\\.mjs|favicon\\.ico|\\.gitignore)" | sort`,
+  ];
+
+  const exec = await container.exec({
+    Cmd: findCommand,
+    AttachStdout: true,
+    AttachStderr: true,
+  });
+
+  const stream = await exec.start({ Detach: false, Tty: false });
+  const output = await new Promise<string>((resolve, reject) => {
+    let data = "";
+    stream.on("data", (chunk: Buffer) => {
+      data += chunk.toString();
+    });
+    stream.on("end", () => resolve(data));
+    stream.on("error", reject);
+  });
+
+  const paths = output
+    .trim()
+    .split("\n")
+    .filter((p) => p && p !== containerPath);
+
+  const fileTree: Map<string, FileContentItem> = new Map();
+
+  fileTree.set(containerPath, {
+    name: "root",
+    path: containerPath,
+    type: "directory",
+    children: [],
+  });
+
+  const filesToRead: string[] = [];
+  const pathToItemMap: Map<string, FileContentItem> = new Map();
+
+  for (const filePath of paths) {
+    const stat = await getFileStat(container, filePath);
+    const relativePath = filePath.replace(containerPath + "/", "");
+    const parts = relativePath.split("/");
+    const fileName = parts[parts.length - 1] || "";
+
+    const fileItem: FileContentItem = {
+      name: fileName,
+      path: filePath,
+      type: stat.isDirectory ? "directory" : "file",
+    };
+
+    if (stat.isDirectory) {
+      fileItem.children = [];
+    } else {
+      filesToRead.push(filePath);
+    }
+
+    pathToItemMap.set(filePath, fileItem);
+    fileTree.set(filePath, fileItem);
+  }
+
+  const fileContents = await readFilesBatch(docker, containerId, filesToRead);
+
+  for (const [filePath, content] of fileContents) {
+    const fileItem = pathToItemMap.get(filePath);
+    if (fileItem) {
+      fileItem.content = content;
+    }
+  }
+
+  for (const fileItem of pathToItemMap.values()) {
+    const parentPath = fileItem.path.substring(
+      0,
+      fileItem.path.lastIndexOf("/")
+    );
+    const parent = fileTree.get(parentPath || containerPath);
+    if (parent && parent.children) {
+      parent.children.push(fileItem);
+    }
+  }
+
+  const root = fileTree.get(containerPath);
+  return root?.children || [];
+}
+
+async function readFilesBatch(
+  docker: Docker,
+  containerId: string,
+  filePaths: string[]
+): Promise<Map<string, string>> {
+  const results = new Map<string, string>();
+  const batchSize = 50;
+
+  for (let i = 0; i < filePaths.length; i += batchSize) {
+    const batch = filePaths.slice(i, i + batchSize);
+    const batchPromises = batch.map(async (filePath) => {
+      try {
+        const content = await readFile(docker, containerId, filePath);
+        return [filePath, content] as [string, string];
+      } catch (error) {
+        return [
+          filePath,
+          `Error reading file: ${
+            error instanceof Error ? error.message : "Unknown error"
+          }`,
+        ] as [string, string];
+      }
+    });
+
+    const batchResults = await Promise.all(batchPromises);
+    for (const [filePath, content] of batchResults) {
+      results.set(filePath, content);
+    }
+  }
+
+  return results;
+}
+
 async function getFileStat(
   container: Docker.Container,
   filePath: string
@@ -150,7 +283,7 @@ export async function readFile(
     });
 
     stream.on("end", () => {
-      if (stderr) {
+      if (stderr && stderr.trim() !== "exec /bin/sh: invalid argument") {
         console.error("File read stderr:", stderr);
       }
 

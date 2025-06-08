@@ -162,6 +162,27 @@ router.get("/:containerId/file-tree", async (req, res) => {
   }
 });
 
+router.get("/:containerId/file-content-tree", async (req, res) => {
+  const { containerId } = req.params;
+
+  try {
+    const fileContentTree = await fileService.getFileContentTree(
+      dockerService.docker,
+      containerId
+    );
+
+    res.json({
+      success: true,
+      fileContentTree,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+});
+
 //@ts-ignore
 router.get("/:containerId/file", async (req, res) => {
   const { containerId } = req.params;
