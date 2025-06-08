@@ -18,7 +18,7 @@
   </p>
 </div>
 <a href="https://github.com/ntegrals/december">
-    <img src=".assets/header.png" alt="December Logo">
+    <img src=".assets/preview.png" alt="December Preview">
   </a>
 
 ## Features
