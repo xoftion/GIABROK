@@ -30,33 +30,7 @@
     ✅ Real-time chat assistant for development help
     ✅ Project export and deployment capabilities
 
-<!-- ## Demo
-
-You can test the December here: [https://december.ai](https://december.ai) -->
-
-## Motivation
-
-AI-powered development platforms have revolutionized how we build applications. They allow developers to go from idea to working application in seconds, but most solutions are closed-source or require expensive subscriptions.
-
-Until recently, building a local alternative that matched the speed and capabilities of platforms like Loveable, Replit, or Bolt seemed challenging. The recent advances in AI and containerization technologies have made it possible to build a fast, local development environment that gives you full control over your code and API usage.
-
-I would love for this repo to become the go-to place for people who want to run their own AI-powered development environment. I've been working on this project for a while now and I'm really excited to share it with you.
-
-## Why run December locally?
-
-Building applications shouldn't require expensive subscriptions or sacrificing your privacy. December gives you the power of platforms like Loveable, Replit, and Bolt without the downsides:
-
-- **Full Control & Privacy** - Your code, ideas, and projects never leave your machine. No cloud storage, no data mining, no vendor lock-in
-- **Your API Keys, Your Costs** - Use your own OpenAI API key and pay only for what you use. No monthly subscriptions or usage limits imposed by third parties
-- **Complete Feature Access** - No paywalls, premium tiers, or artificial limitations. Every feature is available from day one
-
-Most cloud-based AI development platforms charge $20-100+ per month while limiting your usage and storing your intellectual property on their servers. With December, a $5 OpenAI API credit can generate dozens of complete applications, and you keep full ownership of everything you create.
-
-The local-first approach means you can work offline, modify the platform itself, and never worry about service outages or policy changes affecting your projects. Your development environment evolves with your needs, not a company's business model.
-
-December proves that you don't need to choose between powerful AI assistance and maintaining control over your work. Run it locally, use your own API keys, and build without boundaries.
-
-## Installation
+## Get started (2-3 minutes)
 
 1. Clone the repo
 
@@ -99,6 +73,32 @@ December proves that you don't need to choose between powerful AI assistance and
    The backend will run on port 4000, and the frontend will run on port 3000.
 
    You can now start building your applications with December! 🥳
+
+<!-- ## Demo
+
+You can test the December here: [https://december.ai](https://december.ai) -->
+
+## Motivation
+
+AI-powered development platforms have revolutionized how we build applications. They allow developers to go from idea to working application in seconds, but most solutions are closed-source or require expensive subscriptions.
+
+Until recently, building a local alternative that matched the speed and capabilities of platforms like Loveable, Replit, or Bolt seemed challenging. The recent advances in AI and containerization technologies have made it possible to build a fast, local development environment that gives you full control over your code and API usage.
+
+I would love for this repo to become the go-to place for people who want to run their own AI-powered development environment. I've been working on this project for a while now and I'm really excited to share it with you.
+
+## Why run December locally?
+
+Building applications shouldn't require expensive subscriptions or sacrificing your privacy. December gives you the power of platforms like Loveable, Replit, and Bolt without the downsides:
+
+- **Full Control & Privacy** - Your code, ideas, and projects never leave your machine. No cloud storage, no data mining, no vendor lock-in
+- **Your API Keys, Your Costs** - Use your own OpenAI API key and pay only for what you use. No monthly subscriptions or usage limits imposed by third parties
+- **Complete Feature Access** - No paywalls, premium tiers, or artificial limitations. Every feature is available from day one
+
+Most cloud-based AI development platforms charge $20-100+ per month while limiting your usage and storing your intellectual property on their servers. With December, a $5 OpenAI API credit can generate dozens of complete applications, and you keep full ownership of everything you create.
+
+The local-first approach means you can work offline, modify the platform itself, and never worry about service outages or policy changes affecting your projects. Your development environment evolves with your needs, not a company's business model.
+
+December proves that you don't need to choose between powerful AI assistance and maintaining control over your work. Run it locally, use your own API keys, and build without boundaries.
 
 ## Contact
 
