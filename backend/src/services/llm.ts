@@ -1,6 +1,8 @@
 import OpenAI from "openai";
 import { config } from "../../config";
 import prompt from "../utils/prompt.txt";
+import * as dockerService from "./docker";
+import * as fileService from "./file";
 
 const openai = new OpenAI({
   apiKey: config.aiSdk.apiKey,
@@ -81,7 +83,17 @@ export async function sendMessage(
 
   session.messages.push(userMsg);
 
-  const systemPrompt = `${prompt}`;
+  const fileContentTree = await fileService.getFileContentTree(
+    dockerService.docker,
+    containerId
+  );
+
+  const codeContext = JSON.stringify(fileContentTree, null, 2);
+
+  const systemPrompt = `${prompt}
+
+Current codebase structure and content:
+${codeContext}`;
 
   const messages = [
     { role: "system" as const, content: systemPrompt },
@@ -91,16 +103,15 @@ export async function sendMessage(
     })),
   ];
 
-  // console.log(
-  //   ...session.messages.map((msg) => ({
-  //     role: msg.role as "user" | "assistant",
-  //     content: msg.content,
-  //   })), "message history"
-  // );
+  console.log(
+    "Chat history being sent to LLM:",
+    JSON.stringify(messages, null, 2)
+  );
 
   const completion = await openai.chat.completions.create({
     model: config.aiSdk.model,
     messages,
+    //@ts-ignore
     temperature: config.aiSdk.temperature,
   });
 
