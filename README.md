@@ -5,10 +5,13 @@
 <h3 align="center">Say hi to December ☃️</h3>
 
   <p align="center">
-    December is an open-source Loveable, Replit or Bolt alternative that you can run locally with your own API keys, ensuring complete privacy and significant cost savings.
+    December is an open-source alternative to AI-powered development platforms like Loveable, Replit, and Bolt that you can run locally with your own API keys, ensuring complete privacy and significant cost savings. 
     <br />
     <br />
-    <a href="https://december.ai">View Documentation</a>
+    December lets you build full-stack applications from simple text prompts using AI.
+    <br />
+    <br />
+    <a href="#get-started">Get started</a>
     ·
     <a href="https://github.com/ntegrals/december/issues/new?assignees=&labels=bug&projects=&template=bug_report.md&title=">Report Bug</a>
     ·
@@ -29,7 +32,15 @@
     ✅ Real-time chat assistant for development help
     ✅ Project export and deployment capabilities
 
-## Get started (~2 minutes)
+## Roadmap
+
+    🔄 LLM streaming support
+    🔄 Document & image attachments
+    🔄 Improved fault tolerance
+    🔄 Comprehensive test coverage
+    🔄 Multi-framework support (beyond Next.js)
+
+## Get started
 
 1. Clone the repo
 
