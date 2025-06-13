@@ -103,19 +103,12 @@ ${codeContext}`;
     })),
   ];
 
-  // console.log(
-  //   "Chat history being sent to LLM:",
-  //   JSON.stringify(messages, null, 2)
-  // );
-
   const completion = await openai.chat.completions.create({
     model: config.aiSdk.model,
     messages,
     //@ts-ignore
     temperature: config.aiSdk.temperature,
   });
-
-  // console.log("ai response:", completion);
 
   const assistantContent =
     completion.choices[0]?.message?.content ||
@@ -135,4 +128,80 @@ ${codeContext}`;
     userMessage: userMsg,
     assistantMessage: assistantMsg,
   };
+}
+
+export async function* sendMessageStream(
+  containerId: string,
+  userMessage: string
+): AsyncGenerator<{ type: "user" | "assistant" | "done"; data: any }> {
+  const session = getOrCreateChatSession(containerId);
+
+  const userMsg: Message = {
+    id: `user-${Date.now()}`,
+    role: "user",
+    content: userMessage,
+    timestamp: new Date().toISOString(),
+  };
+
+  session.messages.push(userMsg);
+  yield { type: "user", data: userMsg };
+
+  const fileContentTree = await fileService.getFileContentTree(
+    dockerService.docker,
+    containerId
+  );
+
+  const codeContext = JSON.stringify(fileContentTree, null, 2);
+
+  const systemPrompt = `${prompt}
+
+Current codebase structure and content:
+${codeContext}`;
+
+  const messages = [
+    { role: "system" as const, content: systemPrompt },
+    ...session.messages.map((msg) => ({
+      role: msg.role as "user" | "assistant",
+      content: msg.content,
+    })),
+  ];
+
+  const assistantId = `assistant-${Date.now()}`;
+  let assistantContent = "";
+
+  const stream = await openai.chat.completions.create({
+    model: config.aiSdk.model,
+    messages,
+    //@ts-ignore
+    temperature: config.aiSdk.temperature,
+    stream: true,
+  });
+
+  for await (const chunk of stream) {
+    const delta = chunk.choices[0]?.delta;
+    if (delta?.content) {
+      assistantContent += delta.content;
+      yield {
+        type: "assistant",
+        data: {
+          id: assistantId,
+          role: "assistant",
+          content: assistantContent,
+          timestamp: new Date().toISOString(),
+        },
+      };
+    }
+  }
+
+  const finalAssistantMsg: Message = {
+    id: assistantId,
+    role: "assistant",
+    content: assistantContent,
+    timestamp: new Date().toISOString(),
+  };
+
+  session.messages.push(finalAssistantMsg);
+  session.updatedAt = new Date().toISOString();
+
+  yield { type: "done", data: finalAssistantMsg };
 }

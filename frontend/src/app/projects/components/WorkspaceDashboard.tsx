@@ -22,6 +22,7 @@ import {
   getChatHistory,
   Message,
   sendChatMessage,
+  sendChatMessageStream,
 } from "../../../lib/backend/api";
 import { ChatInput } from "../../create/components/ChatInput";
 import { ChatMessage } from "../../create/components/ChatMessage";
@@ -44,8 +45,12 @@ export const WorkspaceDashboard = ({
   const [containerUrl, setContainerUrl] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const [hasProcessedPrompt, setHasProcessedPrompt] = useState<boolean>(false);
+  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(
+    null
+  );
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const streamCancelRef = useRef<(() => void) | null>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -94,14 +99,14 @@ export const WorkspaceDashboard = ({
               setIsLoading(true);
 
               try {
-                const messageResponse = await sendChatMessage(
+                const response = await sendChatMessage(
                   containerId,
                   promptFromUrl
                 );
-                if (messageResponse.success) {
+                if (response.success) {
                   setMessages([
-                    messageResponse.userMessage,
-                    messageResponse.assistantMessage,
+                    response.userMessage,
+                    response.assistantMessage,
                   ]);
                 }
               } catch (error) {
@@ -145,28 +150,53 @@ export const WorkspaceDashboard = ({
     setInputValue("");
     setIsLoading(true);
 
-    try {
-      const response = await sendChatMessage(containerId, userInput);
+    streamCancelRef.current?.();
 
-      if (response.success) {
-        setMessages((prev) => [
-          ...prev,
-          response.userMessage,
-          response.assistantMessage,
-        ]);
+    const cancel = sendChatMessageStream(
+      containerId,
+      userInput,
+      (data) => {
+        if (data.type === "user") {
+          setMessages((prev) => [...prev, data.data]);
+        } else if (data.type === "assistant") {
+          setStreamingMessageId(data.data.id);
+          setMessages((prev) => {
+            const newMessages = [...prev];
+            const existingIndex = newMessages.findIndex(
+              (msg) => msg.id === data.data.id
+            );
+
+            if (existingIndex >= 0) {
+              newMessages[existingIndex] = data.data;
+            } else {
+              newMessages.push(data.data);
+            }
+
+            return newMessages;
+          });
+        } else if (data.type === "done") {
+          setStreamingMessageId(null);
+        }
+      },
+      (error) => {
+        console.error("Streaming error:", error);
+        setIsLoading(false);
+        setStreamingMessageId(null);
+        const errorMessage: Message = {
+          id: `error-${Date.now()}`,
+          role: "assistant",
+          content: "Sorry, I encountered an error. Please try again.",
+          timestamp: new Date().toISOString(),
+        };
+        setMessages((prev) => [...prev, errorMessage]);
+      },
+      () => {
+        setIsLoading(false);
+        setStreamingMessageId(null);
       }
-    } catch (error) {
-      console.error("Failed to send message:", error);
-      const errorMessage: Message = {
-        id: `error-${Date.now()}`,
-        role: "assistant",
-        content: "Sorry, I encountered an error. Please try again.",
-        timestamp: new Date().toISOString(),
-      };
-      setMessages((prev) => [...prev, errorMessage]);
-    } finally {
-      setIsLoading(false);
-    }
+    );
+
+    streamCancelRef.current = cancel;
   };
 
   const handleTextareaKeyDown = (
@@ -509,9 +539,10 @@ export const WorkspaceDashboard = ({
                       message={message}
                       formatMessageContent={formatMessageContent}
                       containerId={containerId}
+                      isStreaming={streamingMessageId === message.id}
                     />
                   ))}
-                  {isLoading && (
+                  {isLoading && !streamingMessageId && (
                     <div className="flex items-start">
                       <div className="flex items-center gap-2 mb-2">
                         <div className="w-4 h-4 bg-gradient-to-br from-blue-500 to-purple-500 rounded" />

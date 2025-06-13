@@ -13,7 +13,7 @@ import {
   Terminal,
   Trash2,
 } from "lucide-react";
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 interface Message {
   id: string;
@@ -26,12 +26,14 @@ interface ChatMessageProps {
   message: Message;
   formatMessageContent: (content: string) => React.ReactNode[];
   containerId?: string;
+  isStreaming?: boolean;
 }
 
 const parseSpecialTags = (
   content: string,
   containerId?: string,
-  messageId?: string
+  messageId?: string,
+  executeOperations: boolean = true
 ) => {
   const components: React.ReactNode[] = [];
   let currentIndex = 0;
@@ -62,12 +64,14 @@ const parseSpecialTags = (
   const getExecutedKey = (containerId: string) => `executed_${containerId}`;
 
   const isMessageExecuted = (containerId: string, messageId: string) => {
+    if (typeof window === "undefined") return false;
     const stored = localStorage.getItem(getExecutedKey(containerId));
     const executed = new Set(stored ? JSON.parse(stored) : []);
     return executed.has(messageId);
   };
 
   const markMessageExecuted = (containerId: string, messageId: string) => {
+    if (typeof window === "undefined") return;
     const stored = localStorage.getItem(getExecutedKey(containerId));
     const executed = new Set(stored ? JSON.parse(stored) : []);
     executed.add(messageId);
@@ -78,7 +82,7 @@ const parseSpecialTags = (
   };
 
   const executeFileOperation = async (type: string, match: RegExpExecArray) => {
-    if (!containerId || !messageId) return;
+    if (!containerId || !messageId || !executeOperations) return;
     if (isMessageExecuted(containerId, messageId)) return;
 
     try {
@@ -170,25 +174,6 @@ const parseSpecialTags = (
     }
   };
 
-  const parseNestedOperations = (text: string) => {
-    const nestedPatterns = {
-      write:
-        /<dec-write\s+(?:path|file_path)="([^"]+)">([\s\S]*?)<\/dec-write>/g,
-      rename: /<dec-rename\s+from="([^"]+)"\s+to="([^"]+)"\s*\/>/g,
-      delete: /<dec-delete\s+(?:path|file_path)="([^"]+)"\s*\/>/g,
-      dependency:
-        /<dec-add-dependency\s+name="([^"]+)"(?:\s+version="([^"]+)")?\s*\/>/g,
-    };
-
-    Object.entries(nestedPatterns).forEach(([type, pattern]) => {
-      let match;
-      pattern.lastIndex = 0;
-      while ((match = pattern.exec(text)) !== null) {
-        executeFileOperation(type, match);
-      }
-    });
-  };
-
   const allMatches: Array<{
     type: string;
     match: RegExpExecArray;
@@ -235,7 +220,10 @@ const parseSpecialTags = (
       }
     }
 
-    if (["write", "rename", "delete", "dependency"].includes(type)) {
+    if (
+      ["write", "rename", "delete", "dependency"].includes(type) &&
+      executeOperations
+    ) {
       executeFileOperation(type, match);
     }
 
@@ -247,7 +235,6 @@ const parseSpecialTags = (
 
   if (currentIndex < content.length) {
     let remainingContent = content.slice(currentIndex);
-
     remainingContent = remainingContent.replace(/<\/dec-code>/g, "");
 
     if (remainingContent.trim()) {
@@ -535,7 +522,10 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
   message,
   formatMessageContent,
   containerId,
+  isStreaming = false,
 }) => {
+  const [hasExecutedOperations, setHasExecutedOperations] = useState(false);
+
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp);
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -545,6 +535,25 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
     /<dec-|<response_format|<user_message|<ai_message|<examples|<guidelines|<console-logs|<useful-context|<current-route|<instructions-reminder|<last-diff/.test(
       message.content
     );
+
+  useEffect(() => {
+    if (
+      !isStreaming &&
+      !hasExecutedOperations &&
+      hasSpecialTags &&
+      containerId
+    ) {
+      parseSpecialTags(message.content, containerId, message.id, true);
+      setHasExecutedOperations(true);
+    }
+  }, [
+    isStreaming,
+    hasExecutedOperations,
+    hasSpecialTags,
+    containerId,
+    message.content,
+    message.id,
+  ]);
 
   return (
     <div
@@ -590,7 +599,8 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                   {parseSpecialTags(
                     message.content,
                     containerId,
-                    message.id
+                    message.id,
+                    false
                   ) || (
                     <div className="prose prose-sm prose-invert max-w-none [&_h2]:text-white [&_h3]:text-white [&_h4]:text-white [&_strong]:text-white">
                       {formatMessageContent(message.content)}
