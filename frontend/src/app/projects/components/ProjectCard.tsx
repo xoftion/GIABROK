@@ -60,6 +60,12 @@ export const ProjectCard = ({
     });
   };
 
+  const getProjectName = () => {
+    const baseName =
+      container.name?.replace("/", "") || `project-${container.id.slice(0, 8)}`;
+    return baseName.length > 20 ? baseName.substring(0, 20) + "..." : baseName;
+  };
+
   return (
     <div className="group relative bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6 hover:bg-white/[0.08] hover:border-white/20 transition-all duration-300 shadow-lg hover:shadow-2xl hover:shadow-white/5">
       <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] via-transparent to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -69,7 +75,7 @@ export const ProjectCard = ({
           <div className="relative">
             <img
               className="w-12 h-12 rounded-lg shadow-lg"
-              src={"/logo-black.png"}
+              src="/december-logo.png"
               alt="Project Icon"
             />
             <div
@@ -101,9 +107,14 @@ export const ProjectCard = ({
         </div>
 
         <div className="mb-6">
-          <h3 className="text-lg font-semibold text-white mb-2 truncate">
-            {container.name?.replace("/", "") ||
-              `project-${container.id.slice(0, 8)}`}
+          <h3
+            className="text-lg font-semibold text-white mb-2 truncate"
+            title={
+              container.name?.replace("/", "") ||
+              `project-${container.id.slice(0, 8)}`
+            }
+          >
+            {getProjectName()}
           </h3>
           <div className="flex items-center gap-2 mb-3">
             <div className="w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
@@ -150,13 +161,15 @@ export const ProjectCard = ({
               {isRunning ? "Stop" : "Start"}
             </button>
 
-            <a
-              href={`/projects/${container.id}`}
-              className="flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/15 text-white border border-white/20 hover:border-white/30 rounded-lg text-xs font-medium transition-all duration-200 backdrop-blur-sm hover:scale-105"
-            >
-              <Code className="w-3.5 h-3.5" />
-              Open
-            </a>
+            {isRunning && (
+              <a
+                href={`/projects/${container.id}`}
+                className="flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/15 text-white border border-white/20 hover:border-white/30 rounded-lg text-xs font-medium transition-all duration-200 backdrop-blur-sm hover:scale-105"
+              >
+                <Code className="w-3.5 h-3.5" />
+                Open
+              </a>
+            )}
           </div>
 
           {container.url && isRunning && (
