@@ -6,7 +6,7 @@ const router = express.Router();
 //@ts-ignore
 router.post("/:containerId/messages", async (req, res) => {
   const { containerId } = req.params;
-  const { message, stream = false } = req.body;
+  const { message, attachments = [], stream = false } = req.body;
 
   if (!message || typeof message !== "string") {
     return res.status(400).json({
@@ -22,7 +22,11 @@ router.post("/:containerId/messages", async (req, res) => {
       res.setHeader("Connection", "keep-alive");
       res.setHeader("Access-Control-Allow-Origin", "*");
 
-      const messageStream = llmService.sendMessageStream(containerId, message);
+      const messageStream = llmService.sendMessageStream(
+        containerId,
+        message,
+        attachments
+      );
 
       for await (const chunk of messageStream) {
         res.write(`data: ${JSON.stringify(chunk)}\n\n`);
@@ -33,7 +37,8 @@ router.post("/:containerId/messages", async (req, res) => {
     } else {
       const { userMessage, assistantMessage } = await llmService.sendMessage(
         containerId,
-        message
+        message,
+        attachments
       );
 
       res.json({

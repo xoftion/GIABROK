@@ -6,7 +6,9 @@ import {
   Code,
   Edit3,
   File,
+  FileText,
   GitBranch,
+  Image,
   Info,
   Navigation,
   Package,
@@ -15,11 +17,20 @@ import {
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 
+interface Attachment {
+  type: "image" | "document";
+  data: string;
+  name: string;
+  mimeType: string;
+  size: number;
+}
+
 interface Message {
   id: string;
   role: "user" | "assistant";
   content: string;
   timestamp: string;
+  attachments?: Attachment[];
 }
 
 interface ChatMessageProps {
@@ -531,6 +542,14 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
 
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return "0 B";
+    const k = 1024;
+    const sizes = ["B", "KB", "MB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
+  };
+
   const hasSpecialTags =
     /<dec-|<response_format|<user_message|<ai_message|<examples|<guidelines|<console-logs|<useful-context|<current-route|<instructions-reminder|<last-diff/.test(
       message.content
@@ -564,8 +583,8 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
       {message.role === "assistant" && (
         <div className="flex items-center gap-2 mb-2 w-full">
           <img
-            className="w-4 h-4"
-            src="/logo-white.png"
+            className="w-4 h-4 rounded"
+            src="/december-logo.png"
             alt="Assistant Avatar"
           />
           <span className="text-sm font-medium text-white/90">Assistant</span>
@@ -590,6 +609,38 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
         )}
 
         <div className="relative z-10">
+          {message.attachments && message.attachments.length > 0 && (
+            <div className="mb-3 flex flex-wrap gap-2">
+              {message.attachments.map((attachment, index) => (
+                <div
+                  key={index}
+                  className="flex items-center gap-2 bg-black/20 rounded-lg px-3 py-2 border border-white/10"
+                >
+                  {attachment.type === "image" ? (
+                    <>
+                      <Image className="w-4 h-4 text-green-400" />
+                      <img
+                        src={`data:${attachment.mimeType};base64,${attachment.data}`}
+                        alt={attachment.name}
+                        className="max-w-32 max-h-20 rounded object-cover"
+                      />
+                    </>
+                  ) : (
+                    <FileText className="w-4 h-4 text-blue-400" />
+                  )}
+                  <div className="flex flex-col">
+                    <span className="text-xs font-medium truncate max-w-24">
+                      {attachment.name}
+                    </span>
+                    <span className="text-xs text-white/60">
+                      {formatFileSize(attachment.size)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           {message.role === "user" ? (
             <div>{message.content}</div>
           ) : (

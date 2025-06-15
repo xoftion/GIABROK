@@ -14,6 +14,7 @@ import {
   RefreshCw,
   Smartphone,
   Terminal,
+  Upload,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -48,9 +49,12 @@ export const WorkspaceDashboard = ({
   const [streamingMessageId, setStreamingMessageId] = useState<string | null>(
     null
   );
+  const [isDragOver, setIsDragOver] = useState<boolean>(false);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const streamCancelRef = useRef<(() => void) | null>(null);
+  const sidebarRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -143,18 +147,108 @@ export const WorkspaceDashboard = ({
     }
   }, [containerId]);
 
-  const handleSendMessage = async (): Promise<void> => {
-    if (!inputValue.trim() || isLoading) return;
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const result = reader.result as string;
+        resolve(result.split(",")[1]);
+      };
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  const validateFiles = (files: File[], existingFiles: File[] = []): File[] => {
+    const maxFileSize = 5 * 1024 * 1024;
+    const maxTotalSize = 20 * 1024 * 1024;
+
+    const existingTotalSize = existingFiles.reduce(
+      (sum, file) => sum + file.size,
+      0
+    );
+    let newTotalSize = existingTotalSize;
+    const validFiles: File[] = [];
+
+    for (const file of files) {
+      const isImage = file.type.startsWith("image/");
+      const isDocument = [
+        "application/pdf",
+        "text/plain",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      ].includes(file.type);
+
+      if (!isImage && !isDocument) {
+        toast.error(`${file.name} is not a supported file type`);
+        continue;
+      }
+
+      if (file.size > maxFileSize) {
+        toast.error(`${file.name} is too large (max 5MB per file)`);
+        continue;
+      }
+
+      if (newTotalSize + file.size > maxTotalSize) {
+        toast.error(
+          `Cannot add ${file.name}: would exceed total size limit (max 20MB)`
+        );
+        continue;
+      }
+
+      newTotalSize += file.size;
+      validFiles.push(file);
+    }
+
+    return validFiles;
+  };
+
+  const handleSendMessage = async (attachments?: File[]): Promise<void> => {
+    const allAttachments = [...(attachments || []), ...pendingFiles];
+
+    if (!inputValue.trim() && allAttachments.length === 0) return;
+    if (isLoading) return;
+
+    const totalSize = allAttachments.reduce((sum, file) => sum + file.size, 0);
+    if (totalSize > 20 * 1024 * 1024) {
+      toast.error("Total file size exceeds 20MB limit");
+      return;
+    }
 
     const userInput = inputValue;
     setInputValue("");
+    setPendingFiles([]);
     setIsLoading(true);
 
     streamCancelRef.current?.();
 
+    let attachmentData: any[] = [];
+    if (allAttachments.length > 0) {
+      try {
+        attachmentData = await Promise.all(
+          allAttachments.map(async (file) => {
+            const base64 = await fileToBase64(file);
+            return {
+              type: file.type.startsWith("image/") ? "image" : "document",
+              data: base64,
+              name: file.name,
+              mimeType: file.type,
+              size: file.size,
+            };
+          })
+        );
+      } catch (error) {
+        console.error("Error processing files:", error);
+        toast.error("Error processing files. Please try again.");
+        setIsLoading(false);
+        return;
+      }
+    }
+
     const cancel = sendChatMessageStream(
       containerId,
       userInput,
+      attachmentData,
       (data) => {
         if (data.type === "user") {
           setMessages((prev) => [...prev, data.data]);
@@ -182,6 +276,15 @@ export const WorkspaceDashboard = ({
         console.error("Streaming error:", error);
         setIsLoading(false);
         setStreamingMessageId(null);
+
+        if (error.includes("413") || error.includes("Payload Too Large")) {
+          toast.error(
+            "Files too large. Please reduce file sizes and try again."
+          );
+        } else {
+          toast.error("Connection error. Please try again.");
+        }
+
         const errorMessage: Message = {
           id: `error-${Date.now()}`,
           role: "assistant",
@@ -206,6 +309,56 @@ export const WorkspaceDashboard = ({
       e.preventDefault();
       handleSendMessage();
     }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isDragOver) {
+      setIsDragOver(true);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const rect = sidebarRef.current?.getBoundingClientRect();
+    if (rect) {
+      const { clientX, clientY } = e;
+      if (
+        clientX < rect.left ||
+        clientX > rect.right ||
+        clientY < rect.top ||
+        clientY > rect.bottom
+      ) {
+        setIsDragOver(false);
+      }
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    const validFiles = validateFiles(droppedFiles, pendingFiles);
+
+    if (validFiles.length > 0) {
+      setPendingFiles((prev) => [...prev, ...validFiles]);
+      if (validFiles.length === droppedFiles.length) {
+        toast.success(`${validFiles.length} file(s) ready to send!`);
+      } else {
+        toast.success(
+          `${validFiles.length} of ${droppedFiles.length} files added`
+        );
+      }
+    }
+  };
+
+  const removePendingFile = (index: number) => {
+    setPendingFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleRefresh = () => {
@@ -331,7 +484,11 @@ export const WorkspaceDashboard = ({
   const WelcomeMessage = () => (
     <div className="flex flex-col items-start mb-4">
       <div className="flex items-center gap-2 mb-2">
-        <img className="w-4 h-4" src="/logo-white.png" alt="Assistant Avatar" />
+        <img
+          className="w-4 h-4 rounded"
+          src="/december-logo.png"
+          alt="Assistant Avatar"
+        />
         <span className="text-sm font-medium text-white/90">Assistant</span>
       </div>
       <div className="rounded-xl px-4 py-3 text-sm leading-relaxed bg-gray-700/60 backdrop-blur-md border border-gray-600/40 text-gray-100 w-full shadow-sm relative">
@@ -375,13 +532,11 @@ export const WorkspaceDashboard = ({
               href="/"
               className="flex items-center gap-3 text-white/90 hover:text-white transition-colors group"
             >
-              <img
-                className="w-8 h-8 rounded-lg"
-                src="/logo-white.png"
-                alt="December Logo"
-              />
-              <span className="text-lg font-semibold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-                December
+              <span
+                className="text-lg bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent"
+                style={{ fontFamily: "XSpace, monospace" }}
+              >
+                DECEMBER
               </span>
             </Link>
 
@@ -519,8 +674,30 @@ export const WorkspaceDashboard = ({
 
         <div className="flex min-h-0 flex-1">
           {sidebarOpen && (
-            <div className="w-80 bg-black/60 backdrop-blur-xl border-r border-gray-800/50 flex flex-col relative">
+            <div
+              ref={sidebarRef}
+              className="w-80 bg-black/60 backdrop-blur-xl border-r border-gray-800/50 flex flex-col relative"
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
               <div className="absolute inset-0 bg-gradient-to-b from-gray-700/10 via-gray-800/5 to-gray-700/10" />
+
+              {isDragOver && (
+                <div className="absolute inset-0 bg-blue-500/10 backdrop-blur-sm border-2 border-dashed border-blue-400/60 rounded-lg z-50 flex items-center justify-center">
+                  <div className="text-center p-8">
+                    <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-500/20 rounded-full mb-4">
+                      <Upload className="w-8 h-8 text-blue-400" />
+                    </div>
+                    <div className="text-lg font-medium text-white mb-2">
+                      Drop files here
+                    </div>
+                    <div className="text-sm text-blue-200">
+                      Images, PDFs, and documents supported
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="flex items-center gap-3 h-12 px-4 border-b border-gray-800/30 relative z-10">
                 <Terminal className="w-4 h-4 text-white/70" />
@@ -568,6 +745,8 @@ export const WorkspaceDashboard = ({
                   textareaRef={textareaRef}
                   onKeyDown={handleTextareaKeyDown}
                   disabled={isLoading}
+                  pendingFiles={pendingFiles}
+                  onRemovePendingFile={removePendingFile}
                 />
               </div>
             </div>

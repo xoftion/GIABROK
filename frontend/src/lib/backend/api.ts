@@ -21,6 +21,15 @@ export interface Message {
   role: "user" | "assistant";
   content: string;
   timestamp: string;
+  attachments?: Attachment[];
+}
+
+export interface Attachment {
+  type: "image" | "document";
+  data: string;
+  name: string;
+  mimeType: string;
+  size: number;
 }
 
 export interface ApiResponse<T> {
@@ -137,13 +146,14 @@ export async function deleteContainer(
 
 export async function sendChatMessage(
   containerId: string,
-  message: string
+  message: string,
+  attachments?: any[]
 ): Promise<ChatResponse> {
   const response = await fetchApi<ChatResponse>(
     `/chat/${containerId}/messages`,
     {
       method: "POST",
-      body: JSON.stringify({ message }),
+      body: JSON.stringify({ message, attachments }),
     }
   );
   return response;
@@ -152,6 +162,7 @@ export async function sendChatMessage(
 export function sendChatMessageStream(
   containerId: string,
   message: string,
+  attachments: any[] = [],
   onMessage: (data: any) => void,
   onError?: (error: string) => void,
   onComplete?: () => void
@@ -163,7 +174,7 @@ export function sendChatMessageStream(
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ message, stream: true }),
+    body: JSON.stringify({ message, attachments, stream: true }),
     signal: abortController.signal,
   })
     .then(async (response) => {

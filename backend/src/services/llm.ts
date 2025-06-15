@@ -14,6 +14,15 @@ export interface Message {
   role: "user" | "assistant";
   content: string;
   timestamp: string;
+  attachments?: Attachment[];
+}
+
+export interface Attachment {
+  type: "image" | "document";
+  data: string;
+  name: string;
+  mimeType: string;
+  size: number;
 }
 
 export interface ChatSession {
@@ -68,9 +77,38 @@ export function getOrCreateChatSession(containerId: string): ChatSession {
   return session;
 }
 
+function buildMessageContent(
+  message: string,
+  attachments: Attachment[] = []
+): any[] {
+  const content: any[] = [{ type: "text", text: message }];
+
+  for (const attachment of attachments) {
+    if (attachment.type === "image") {
+      content.push({
+        type: "image_url",
+        image_url: {
+          url: `data:${attachment.mimeType};base64,${attachment.data}`,
+        },
+      });
+    } else if (attachment.type === "document") {
+      const decodedText = Buffer.from(attachment.data, "base64").toString(
+        "utf-8"
+      );
+      content.push({
+        type: "text",
+        text: `\n\nDocument "${attachment.name}" content:\n${decodedText}`,
+      });
+    }
+  }
+
+  return content;
+}
+
 export async function sendMessage(
   containerId: string,
-  userMessage: string
+  userMessage: string,
+  attachments: Attachment[] = []
 ): Promise<{ userMessage: Message; assistantMessage: Message }> {
   const session = getOrCreateChatSession(containerId);
 
@@ -79,6 +117,7 @@ export async function sendMessage(
     role: "user",
     content: userMessage,
     timestamp: new Date().toISOString(),
+    attachments: attachments.length > 0 ? attachments : undefined,
   };
 
   session.messages.push(userMsg);
@@ -95,17 +134,20 @@ export async function sendMessage(
 Current codebase structure and content:
 ${codeContext}`;
 
-  const messages = [
+  const openaiMessages = [
     { role: "system" as const, content: systemPrompt },
     ...session.messages.map((msg) => ({
       role: msg.role as "user" | "assistant",
-      content: msg.content,
+      content:
+        msg.role === "user" && msg.attachments
+          ? buildMessageContent(msg.content, msg.attachments)
+          : msg.content,
     })),
   ];
 
   const completion = await openai.chat.completions.create({
     model: config.aiSdk.model,
-    messages,
+    messages: openaiMessages,
     //@ts-ignore
     temperature: config.aiSdk.temperature,
   });
@@ -132,7 +174,8 @@ ${codeContext}`;
 
 export async function* sendMessageStream(
   containerId: string,
-  userMessage: string
+  userMessage: string,
+  attachments: Attachment[] = []
 ): AsyncGenerator<{ type: "user" | "assistant" | "done"; data: any }> {
   const session = getOrCreateChatSession(containerId);
 
@@ -141,6 +184,7 @@ export async function* sendMessageStream(
     role: "user",
     content: userMessage,
     timestamp: new Date().toISOString(),
+    attachments: attachments.length > 0 ? attachments : undefined,
   };
 
   session.messages.push(userMsg);
@@ -158,11 +202,14 @@ export async function* sendMessageStream(
 Current codebase structure and content:
 ${codeContext}`;
 
-  const messages = [
+  const openaiMessages = [
     { role: "system" as const, content: systemPrompt },
     ...session.messages.map((msg) => ({
       role: msg.role as "user" | "assistant",
-      content: msg.content,
+      content:
+        msg.role === "user" && msg.attachments
+          ? buildMessageContent(msg.content, msg.attachments)
+          : msg.content,
     })),
   ];
 
@@ -171,7 +218,7 @@ ${codeContext}`;
 
   const stream = await openai.chat.completions.create({
     model: config.aiSdk.model,
-    messages,
+    messages: openaiMessages,
     //@ts-ignore
     temperature: config.aiSdk.temperature,
     stream: true,
