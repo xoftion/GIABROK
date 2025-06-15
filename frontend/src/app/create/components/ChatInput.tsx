@@ -173,7 +173,7 @@ export const ChatInput = ({
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={onKeyDown}
-              placeholder="Ask about your project or drag & drop files..."
+              placeholder="What do you want to build?"
               disabled={disabled}
               className="w-full bg-transparent text-white placeholder-zinc-400 resize-none focus:outline-none py-2 px-0 min-h-[44px] max-h-[120px] text-sm leading-relaxed disabled:opacity-50"
               rows={1}
