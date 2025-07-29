@@ -2,7 +2,7 @@
 
 <div align="center">
 
-<h3 align="center">Say hi to December ☃️</h3>
+<h3 align="center">Say hi to GIABROK ☃️</h3>
 
   <p align="center">
     December is an open-source alternative to AI-powered development platforms like Loveable, Replit, and Bolt that you can run locally with your own API keys, ensuring complete privacy and significant cost savings. 
