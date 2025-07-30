@@ -25,7 +25,7 @@ app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use("/containers", containerRoutes);
 app.use("/chat", chatRoutes);
 
-const PORT = process.env.PORT || 1000;
+const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`Docker Container API running on port ${PORT}`);
 });
