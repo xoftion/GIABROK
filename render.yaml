@@ -1,0 +1,13 @@
+services:
+  - name: giabrok-backend
+    type: web
+    env: docker
+    repo: https://github.com/xoftion/GIABROK
+    dockerfilePath: backend/src/Dockerfile
+    buildFilter:
+      paths:
+        - backend/**
+    plan: free
+    envVars:
+      - key: PORT
+        value: 3001
