@@ -32,3 +32,7 @@ app.listen(PORT, HOST, () => {
 });
 
 export default app;
+
+app.get("/", (req, res) => {
+  res.send("GIABROK Docker Container API is running 🚀");
+});
