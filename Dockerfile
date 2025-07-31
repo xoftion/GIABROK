@@ -1,23 +1,27 @@
-# Start from Bun base image
-FROM oven/bun:1.0
+# ─── Stage 1: Build Frontend with Node.js ───
+FROM node:18-alpine AS frontend-builder
+WORKDIR /app/frontend
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm install
+COPY frontend/ ./
+RUN npm run build
 
-# Set working directory
+# ─── Stage 2: Final Image with Bun backend ───
+FROM oven/bun:1.0
 WORKDIR /app
 
-# Install build tools needed for native modules
-RUN apt-get update && apt-get install -y build-essential
+# Copy built frontend app
+COPY --from=frontend-builder /app/frontend/.next ./frontend/.next
+COPY --from=frontend-builder /app/frontend/public ./frontend/public
+COPY --from=frontend-builder /app/frontend/package.json ./frontend/package.json
+COPY --from=frontend-builder /app/frontend/node_modules ./frontend/node_modules
 
-# Copy everything
-COPY . .
+# Copy backend
+COPY backend ./backend
 
-# Install frontend deps and build it
-RUN cd frontend && bun install && bun run build
+# Install build essentials, if needed
+RUN apt-get update && apt-get install -y build-essential \
+  && cd backend && bun install
 
-# Install backend deps (requires build tools)
-RUN cd backend && bun install
-
-# Expose the backend port
 EXPOSE 4000
-
-# Run the backend server
 CMD ["bun", "backend/src/index.ts"]
