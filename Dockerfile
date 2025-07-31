@@ -1,19 +1,26 @@
-# Use Bun official image
-FROM oven/bun:1.0
+# 1️⃣ Build frontend with Node.js
+FROM node:18-alpine AS frontend
+WORKDIR /app/frontend
+COPY frontend/package*.json ./
+COPY frontend/ .
+RUN npm install
+RUN npm run build
 
+# 2️⃣ Bundle runtime image with Bun for backend
+FROM oven/bun:1.0
 WORKDIR /app
 
-# Copy everything into the container
-COPY . .
+# Copy frontend build artifacts
+COPY --from=frontend /app/frontend/.next ./frontend/.next
+COPY --from=frontend /app/frontend/public ./frontend/public
+COPY --from=frontend /app/frontend/package.json ./frontend/package.json
+COPY --from=frontend /app/frontend/node_modules ./frontend/node_modules
 
-# Install frontend dependencies, then build the Next.js app
-RUN cd frontend && bun install && bun run build
+# Copy full backend
+COPY backend ./backend
 
-# Install backend dependencies
+# Install backend deps using Bun
 RUN cd backend && bun install
 
-# Expose port 4000 for Render
 EXPOSE 4000
-
-# Start the Bun backend server
 CMD ["bun", "backend/src/index.ts"]
