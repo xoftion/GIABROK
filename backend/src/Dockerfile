@@ -12,12 +12,12 @@ ENV PATH="/root/.bun/bin:$PATH"
 WORKDIR /app
 
 # Copy package.json and install dependencies
-COPY backend/package.json ./
+COPY ../package.json ./
 RUN bun install --production
 
 # Copy source and config files
-COPY backend/src ./src
-COPY config.ts ./config.ts
+COPY ../src ./src
+COPY ../../config.ts ./config.ts
 
 # Expose the port defined by Render's PORT environment variable
 EXPOSE ${PORT}
