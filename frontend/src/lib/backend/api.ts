@@ -1,4 +1,4 @@
-export const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://giabrok.onrender.com";
+export const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://giabrok-0dzt.onrender.com";
 export interface Container {
   id: string;
   name: string;
