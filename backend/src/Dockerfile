@@ -1,17 +1,31 @@
-# Use Bun official image
-FROM oven/bun:1.1.13
+# backend/Dockerfile
+FROM node:18-alpine
+
+# Install bun
+RUN apk add --no-cache curl bash
+RUN curl -fsSL https://bun.sh/install | bash
+ENV PATH="/root/.bun/bin:$PATH"
 
 # Set working directory
 WORKDIR /app
 
-# Copy only backend files
-COPY ./backend /app
+# Copy package.json and bun.lockb (if exists)
+COPY package.json ./
+COPY bun.lockb* ./
 
 # Install dependencies
-RUN bun install --production --no-frozen-lockfile
+RUN bun install --production
 
-# Expose backend port
-EXPOSE 4000
+# Copy source code
+COPY src ./src
+COPY config.ts* ./
 
-# Run the backend server in production
-CMD ["bun", "run", "src/index.ts"]
+# Expose port (Render expects 10000 by default)
+EXPOSE 10000
+
+# Environment variable for production
+ENV NODE_ENV=production
+ENV PORT=10000
+
+# Start the server
+CMD ["bun", "src/index.ts"]
