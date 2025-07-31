@@ -26,8 +26,9 @@ app.use("/containers", containerRoutes);
 app.use("/chat", chatRoutes);
 
 const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => {
-  console.log(`Docker Container API running on port ${PORT}`);
+const HOST = "0.0.0.0"; // Explicitly bind to 0.0.0.0 for Render
+app.listen(PORT, HOST, () => {
+  console.log(`Docker Container API running on http://${HOST}:${PORT}`);
 });
 
 export default app;
