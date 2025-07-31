@@ -5,18 +5,18 @@ import containerRoutes from "./routes/containers";
 const app = express();
 
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
-  );
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    res.header(
+        "Access-Control-Allow-Headers",
+        "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+    );
 
-  if (req.method === "OPTIONS") {
-    res.sendStatus(200);
-  } else {
-    next();
-  }
+    if (req.method === "OPTIONS") {
+        res.sendStatus(200);
+    } else {
+        next();
+    }
 });
 
 app.use(express.json({ limit: "50mb" }));
@@ -28,7 +28,7 @@ app.use("/chat", chatRoutes);
 const PORT = process.env.PORT || 4000;
 const HOST = "0.0.0.0"; // Explicitly bind to 0.0.0.0 for Render
 app.listen(PORT, HOST, () => {
-  console.log(`Docker Container API running on http://${HOST}:${PORT}`);
+    console.log(`Docker Container API running on ${HOST}:${PORT}`);
 });
 
 export default app;
