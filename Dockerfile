@@ -1,36 +1,41 @@
-# --- Stage 1: Build frontend with Node ---
-FROM node:20 AS frontend-builder
+# ---------- Stage 1: Build frontend ----------
+FROM oven/bun:1.1.13 AS frontend
 
-WORKDIR /app
-
-# Copy only frontend directory
-COPY frontend ./frontend
-
-# Install and build the frontend
 WORKDIR /app/frontend
-RUN npm install && npm run build
+
+COPY frontend/package.json frontend/bun.lockb ./
+RUN bun install
+
+COPY frontend ./
+RUN bun run build
 
 
-# --- Stage 2: Run backend with Bun ---
+# ---------- Stage 2: Full App with backend ----------
 FROM oven/bun:1.1.13
 
+# Add compiler tools to support native modules like cpu-features
+RUN apt update && apt install -y build-essential
+
+# Set working directory
 WORKDIR /app
 
-# Copy backend and root config
-COPY backend ./backend
+# Copy shared files (config.ts in root)
 COPY config.ts ./
 
-# Copy built frontend from previous stage
-COPY --from=frontend-builder /app/frontend/.next ./frontend/.next
-COPY --from=frontend-builder /app/frontend/public ./frontend/public
-COPY --from=frontend-builder /app/frontend/package.json ./frontend/package.json
+# Copy built frontend output into /app/frontend
+COPY --from=frontend /app/frontend/.next ./frontend/.next
+COPY --from=frontend /app/frontend/public ./frontend/public
+COPY --from=frontend /app/frontend/package.json ./frontend/package.json
+
+# Copy backend source
+COPY backend ./backend
 
 # Install backend dependencies
 WORKDIR /app/backend
 RUN bun install
 
-# Expose backend port
+# Expose backend API port for Render
 EXPOSE 4000
 
-# Start backend server
+# Start the Bun backend
 CMD ["bun", "src/index.ts"]
