@@ -1,20 +1,17 @@
-FROM node:18-alpine
+# Use Bun official image
+FROM oven/bun:1.1.13
 
-RUN apk add --no-cache curl bash
-
-RUN curl -fsSL https://bun.sh/install | bash
-ENV PATH="/root/.bun/bin:$PATH"
-
+# Set working directory
 WORKDIR /app
 
-# Clone the December Next.js template repository
-RUN curl -L https://github.com/ntegrals/december-nextjs-template/archive/main.tar.gz | tar -xz && \
-    mv december-nextjs-template-main my-nextjs-app
+# Copy only backend files
+COPY ./backend /app
 
-WORKDIR /app/my-nextjs-app
+# Install dependencies
+RUN bun install --production
 
-RUN bun install
+# Expose backend port
+EXPOSE 4000
 
-EXPOSE 3001
-
-CMD ["bun", "dev"]
+# Run the backend server in production
+CMD ["bun", "run", "src/index.ts"]
