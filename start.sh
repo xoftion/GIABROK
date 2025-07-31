@@ -1,15 +1,13 @@
 #!/bin/bash
 
 echo "Starting backend server..."
-
-# copy config file to backend directory
 cp config.ts backend/config.ts
-cd backend && bun src/index.ts &
+cd backend && bun run build && bun src/index.ts &
 
 echo "Starting frontend server..."
-cd frontend && bun dev &
+cd frontend && bun run build && bun run start &
 
-echo "Both servers are starting..."
+echo "Both servers are running..."
 echo "Press Ctrl+C to stop both servers"
 
 wait
