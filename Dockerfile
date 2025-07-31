@@ -1,26 +1,36 @@
-# Base image with Bun
-FROM oven/bun:1.1.13 as base
+# --- Stage 1: Build frontend with Node ---
+FROM node:20 AS frontend-builder
 
-# Set working directory
 WORKDIR /app
 
-# Copy all files
-COPY . .
+# Copy only frontend directory
+COPY frontend ./frontend
 
-# ========================
-# 🔧 Build Frontend
-# ========================
+# Install and build the frontend
 WORKDIR /app/frontend
-RUN bun install && bun run build
+RUN npm install && npm run build
 
-# ========================
-# 🚀 Start Backend
-# ========================
+
+# --- Stage 2: Run backend with Bun ---
+FROM oven/bun:1.1.13
+
+WORKDIR /app
+
+# Copy backend and root config
+COPY backend ./backend
+COPY config.ts ./
+
+# Copy built frontend from previous stage
+COPY --from=frontend-builder /app/frontend/.next ./frontend/.next
+COPY --from=frontend-builder /app/frontend/public ./frontend/public
+COPY --from=frontend-builder /app/frontend/package.json ./frontend/package.json
+
+# Install backend dependencies
 WORKDIR /app/backend
 RUN bun install
 
-# Expose port Render will use
+# Expose backend port
 EXPOSE 4000
 
-# Start the backend server
+# Start backend server
 CMD ["bun", "src/index.ts"]
