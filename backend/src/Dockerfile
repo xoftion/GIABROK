@@ -1,31 +1,27 @@
-# backend/Dockerfile
+# Use a lightweight Node.js base image
 FROM node:18-alpine
 
-# Install bun
+# Install curl and bash for Bun installation
 RUN apk add --no-cache curl bash
+
+# Install Bun
 RUN curl -fsSL https://bun.sh/install | bash
 ENV PATH="/root/.bun/bin:$PATH"
 
 # Set working directory
 WORKDIR /app
 
-# Copy package.json and bun.lockb (if exists)
-COPY package.json ./
-COPY bun.lockb* ./
 
-# Install dependencies
+# Copy package.json and install dependencies
+COPY backend/package.json ./
 RUN bun install --production
 
-# Copy source code
-COPY src ./src
-COPY config.ts* ./
+# Copy the rest of the backend code
+COPY backend/src ./src
+COPY backend/config.ts ./config.ts
 
-# Expose port (Render expects 10000 by default)
-EXPOSE 10000
+# Expose the port defined by Render's PORT environment variable
+EXPOSE ${PORT}
 
-# Environment variable for production
-ENV NODE_ENV=production
-ENV PORT=10000
-
-# Start the server
-CMD ["bun", "src/index.ts"]
+# Start the backend in production mode
+CMD ["bun", "run", "start"]
