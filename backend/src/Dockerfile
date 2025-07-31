@@ -8,7 +8,7 @@ WORKDIR /app
 COPY ./backend /app
 
 # Install dependencies
-RUN bun install --production
+RUN bun install --production --no-frozen-lockfile
 
 # Expose backend port
 EXPOSE 4000
