@@ -1,14 +1,12 @@
 #!/bin/bash
 
 echo "Starting backend server..."
-cd /app/backend
-bun src/index.ts &
+cp config.ts backend/config.ts
+cd backend && bun run start &
 
 echo "Starting frontend server..."
-cd /app/frontend
-bun run start &
+cd frontend && bun run start &
 
-echo "Both servers are started..."
+echo "Both servers are starting..."
 echo "Press Ctrl+C to stop both servers"
-
 wait
