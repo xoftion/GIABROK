@@ -1,33 +1,41 @@
-# frontend/Dockerfile
-FROM node:18-alpine
+# Build stage
+FROM node:18-alpine AS builder
 
-# Install bun
+# Install Bun
 RUN apk add --no-cache curl bash
 RUN curl -fsSL https://bun.sh/install | bash
 ENV PATH="/root/.bun/bin:$PATH"
 
-# Set working directory
 WORKDIR /app
 
-# Copy package.json and bun.lockb (if exists)
-COPY package.json ./
-COPY bun.lockb* ./
-
-# Install dependencies
+# Copy package.json and install dependencies
+COPY frontend/package.json ./
 RUN bun install --production
 
-# Copy source code
-COPY . .
+# Copy the frontend code
+COPY frontend ./
 
 # Build the Next.js app
 RUN bun run build
 
-# Expose port (Render expects 10000)
-EXPOSE 10000
+# Production stage
+FROM node:18-alpine
 
-# Environment variable for production
-ENV NODE_ENV=production
-ENV PORT=10000
+# Install Bun
+RUN apk add --no-cache curl bash
+RUN curl -fsSL https://bun.sh/install | bash
+ENV PATH="/root/.bun/bin:$PATH"
 
-# Start the production server
+WORKDIR /app
+
+# Copy built assets from builder
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/public ./public
+
+# Expose the port defined by Render's PORT environment variable
+EXPOSE ${PORT}
+
+# Start the Next.js app in production
 CMD ["bun", "run", "start"]
